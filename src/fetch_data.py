@@ -42,9 +42,3 @@ def parse_keyword_search_response(json_response) -> dict:
         print("Fetch failed")
 
     return player_id_name
-
-
-if __name__ == "__main__":
-    player_fetch_response = fetch_players_from_keyword("smith-rowe")
-    if player_fetch_response:
-        parse_keyword_search_response(player_fetch_response)

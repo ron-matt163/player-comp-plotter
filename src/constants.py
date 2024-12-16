@@ -1,0 +1,1 @@
+PERMITTED_STAT_TYPES = ["goals", "assists", "xG", "xA"]
