@@ -20,8 +20,9 @@ def get_player_stat_per_season(player_id: str, stat_type: str):
 
     player_stats_per_season = {}
     for season_stats in player_seasons_stats:
-        player_stats_per_season[season_stats["season"]] = season_stats.get(stat_type, 0)
+        player_stats_per_season[season_stats["season"]] = float(player_stats_per_season.get(season_stats["season"], 0)) + float(season_stats.get(stat_type, 0))
     
     return player_stats_per_season
+
 
 

@@ -1,4 +1,3 @@
-import json
 import requests
 
 def fetch_players_from_keyword(keyword: str):
