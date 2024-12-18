@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from constants import PERMITTED_STAT_TYPES
+from typing import List
+from player_stats import PlayerStats
 
 def get_labels_for_stat_type(stat_type):
     labels = {}
@@ -21,24 +23,23 @@ def get_labels_for_stat_type(stat_type):
     return labels
 
 
-def plot_stats_per_season(stat_type: str, data1: dict, data2: dict, player1: str, player2: str):
+def plot_stats_per_season(stat_type: str, players: List[PlayerStats]):
     """
-    Plots the given data representing goals scored per season for two players.
+    Plots the given data representing stats per season for multiple players.
 
     Args:
-        data1 (dict): A dictionary where keys are seasons (str) and values are goals (str) for player 1.
-        data2 (dict): A dictionary where keys are seasons (str) and values are goals (str) for player 2.
-        player1 (str): Name of player 1.
-        player2 (str): Name of player 2.
+        stat_type (str): The type of stats to plot.
+        players (list): A list of PlayerStats instances.
     """
     if stat_type not in PERMITTED_STAT_TYPES:
         print("ERROR: Required stat type not found in the understat API library response")
         return None
 
-    # Extract seasons and goals for both players
-    seasons = sorted(set(data1.keys()).union(data2.keys()))
-    stat1 = [float(data1.get(season, 0)) for season in seasons]
-    stat2 = [float(data2.get(season, 0)) for season in seasons]
+    # Extract all seasons from all players
+    all_seasons = set()
+    for player in players:
+        all_seasons.update(player.stats_per_season.keys())
+    seasons = sorted(all_seasons)
 
     # Set up the font and style
     mpl.rcParams['text.color'] = 'white'
@@ -52,8 +53,10 @@ def plot_stats_per_season(stat_type: str, data1: dict, data2: dict, player1: str
     fig, ax = plt.subplots(figsize=(16, 10), facecolor='#1c1c1c')  # Darker shade of gray
     ax.set_facecolor('#1c1c1c')
 
-    ax.plot(seasons, stat1, marker='o', color='skyblue', linewidth=2, label=player1)
-    ax.plot(seasons, stat2, marker='o', color='orange', linewidth=2, label=player2)
+    # Plot stats for each player
+    for player in players:
+        stats = [float(player.stats_per_season.get(season, 0)) for season in seasons]
+        ax.plot(seasons, stats, marker='o', linewidth=2, label=player.player_name)
 
     # Customize the plot
     ax.set_title(labels["title"], fontsize=20)
