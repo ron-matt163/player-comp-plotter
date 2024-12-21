@@ -36,8 +36,13 @@
 
 .player-input-row {
   display: flex;
+  /* Use flexbox for alignment */
   align-items: center;
+  /* Align items vertically at the center */
+  gap: 10px;
+  /* Add spacing between input and button */
   margin-bottom: 10px;
+  /* Optional: spacing between rows */
 }
 
 .player-input-row input {
@@ -108,4 +113,34 @@ img {
   height: auto;
   border: 2px solid #ccc;
   border-radius: 4px;
+}
+
+.input-suggestions-container {
+  position: relative;
+  width: 100%;
+}
+
+.suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 10;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.suggestions-list li {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.suggestions-list li:hover {
+  background-color: #f0f0f0;
 }

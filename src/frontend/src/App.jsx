@@ -1,23 +1,62 @@
-import React, { useState } from "react";
+import { useState, useRef } from "react";
 import axios from "axios";
 import "./App.css";
 
 function App() {
-  const [players, setPlayers] = useState([""]);
-  const [statType, setStatType] = useState("Goals");
+  const [players, setPlayers] = useState([{ name: "", id: "" }]);
+  const [statType, setStatType] = useState("goals");
+  const [suggestions, setSuggestions] = useState({});
   const [plotUrl, setPlotUrl] = useState("");
+  const typingTimeoutRef = useRef(null);
 
   const handlePlayerChange = (index, value) => {
     const updatedPlayers = [...players];
-    updatedPlayers[index] = value;
+    updatedPlayers[index] = { name: value, id: "" }; // Reset ID when changing input
     setPlayers(updatedPlayers);
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(async () => {
+      if (value.trim() !== "") {
+        try {
+          const response = await axios.get(
+            `http://localhost:5000/search-players?keyword=${value}`
+          );
+          setSuggestions((prev) => ({ ...prev, [index]: response.data }));
+        } catch (error) {
+          console.error("Error fetching player suggestions:", error);
+        }
+      } else {
+        setSuggestions((prev) => ({ ...prev, [index]: {} }));
+      }
+    }, 500);
   };
 
-  const addPlayerInput = () => {
-    setPlayers([...players, ""]);
+  const handleInputFocus = (index) => {
+    setSuggestions((prev) => ({ ...prev, [index]: suggestions[index] || {} }));
   };
 
-  const removePlayerInput = (index) => {
+  const handleInputBlur = (index) => {
+    setTimeout(() => {
+      setSuggestions((prev) => ({ ...prev, [index]: {} }));
+    }, 200); // Delay to allow clicks on suggestions before hiding
+  };
+
+  const selectSuggestion = (index, id, name) => {
+    const updatedPlayers = [...players];
+    updatedPlayers[index] = { name, id };
+    setPlayers(updatedPlayers);
+
+    setSuggestions((prev) => ({ ...prev, [index]: {} }));
+  };
+
+  const addNewPlayer = () => {
+    setPlayers([...players, { name: "", id: "" }]);
+  };
+
+  const removePlayer = (index) => {
     const updatedPlayers = [...players];
     updatedPlayers.splice(index, 1);
     setPlayers(updatedPlayers);
@@ -56,28 +95,65 @@ function App() {
           <h3>Players</h3>
           {players.map((player, index) => (
             <div key={index} className="player-input-row">
-              <input
-                type="text"
-                value={player}
-                onChange={(e) => handlePlayerChange(index, e.target.value)}
-                placeholder={`Player ${index + 1}`}
-              />
-              {players.length > 1 && (
-                <button
-                  className="remove-button"
-                  onClick={() => removePlayerInput(index)}
-                >
-                  -
-                </button>
-              )}
+              <div className="input-suggestions-container">
+                <input
+                  type="text"
+                  style={{ width: "90%" }}
+                  value={player.name}
+                  onChange={(e) => handlePlayerChange(index, e.target.value)}
+                  onFocus={() => handleInputFocus(index)}
+                  onBlur={() => handleInputBlur(index)}
+                  placeholder={`Player ${index + 1}`}
+                />
+                {suggestions[index] && Object.keys(suggestions[index]).length > 0 && (
+                  <ul className="suggestions-list">
+                    {Object.entries(suggestions[index]).map(([id, name]) => (
+                      <li key={id} onClick={() => selectSuggestion(index, id, name)}>
+                        {name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button className="remove-button" onClick={() => removePlayer(index)}>
+                -
+              </button>
             </div>
           ))}
-          <div className="button-container">
-            <button onClick={addPlayerInput}>Add Another Player</button>
-            <button onClick={handleGenerate}>Generate</button>
-          </div>
+
+          <button
+            style={{
+              display: "block",
+              margin: "10px auto",
+              backgroundColor: "#007bff",
+              color: "white",
+              border: "none",
+              padding: "10px 20px",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+            onClick={addNewPlayer}
+          >
+            Add New Player
+          </button>
+          <button
+            style={{
+              display: "block",
+              margin: "10px auto",
+              backgroundColor: "#28a745",
+              color: "white",
+              border: "none",
+              padding: "10px 20px",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+            onClick={handleGenerate}
+          >
+            Generate
+          </button>
         </div>
       </div>
+
       <div className="plot-container">
         {plotUrl ? (
           <img src={plotUrl} alt="Player Stats Plot" />
