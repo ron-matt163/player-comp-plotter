@@ -12,6 +12,8 @@ function App() {
   const typingTimeoutRef = useRef(null);
   const suggestionClickedRef = useRef(false);
 
+  const isGenerateButtonDisabled = players.some(player => player.name.trim() === "");
+
   const handlePlayerChange = (index, value) => {
     const updatedPlayers = [...players];
     updatedPlayers[index] = { name: value, id: "" }; // Reset ID when changing input
@@ -163,17 +165,9 @@ function App() {
             Add New Player
           </button>
           <button
-            style={{
-              display: "block",
-              margin: "10px auto",
-              backgroundColor: "#28a745",
-              color: "white",
-              border: "none",
-              padding: "10px 20px",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
             onClick={handleGenerate}
+            disabled={isGenerateButtonDisabled}
+            className={`generate-button ${isGenerateButtonDisabled ? 'disabled' : ''}`}
           >
             Generate
           </button>
