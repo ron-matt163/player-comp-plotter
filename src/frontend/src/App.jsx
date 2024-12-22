@@ -7,7 +7,10 @@ function App() {
   const [statType, setStatType] = useState("goals");
   const [suggestions, setSuggestions] = useState({});
   const [plotUrl, setPlotUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const typingTimeoutRef = useRef(null);
+  const suggestionClickedRef = useRef(false);
 
   const handlePlayerChange = (index, value) => {
     const updatedPlayers = [...players];
@@ -39,12 +42,17 @@ function App() {
   };
 
   const handleInputBlur = (index) => {
+    // Delay to allow mouse click to register before clearing suggestions
     setTimeout(() => {
-      setSuggestions((prev) => ({ ...prev, [index]: {} }));
-    }, 200); // Delay to allow clicks on suggestions before hiding
+      if (!suggestionClickedRef.current) {
+        setSuggestions((prev) => ({ ...prev, [index]: {} }));
+      }
+      suggestionClickedRef.current = false; // Reset the flag
+    }, 200); // Keep this delay minimal
   };
 
   const selectSuggestion = (index, id, name) => {
+    suggestionClickedRef.current = true; // Mark that a suggestion was clicked
     const updatedPlayers = [...players];
     updatedPlayers[index] = { name, id };
     setPlayers(updatedPlayers);
@@ -64,13 +72,25 @@ function App() {
 
   const handleGenerate = async () => {
     try {
+      setLoading(true);
+      // Fetch client's IP address
+      const ipResponse = await axios.get("https://api64.ipify.org?format=json");
+      const clientIp = ipResponse.data.ip;
+
+      // Generate unique request ID
+      const requestId = `${Date.now()}-${clientIp}`;
       const response = await axios.post("http://localhost:5000/generate-plot", {
         players,
         stat_type: statType,
+        request_id: requestId, // Add the request ID here
       });
-      setPlotUrl(response.data.plot_url);
+
+      const base64Image = response.data.image_base64;
+      setPlotUrl(`data:image/png;base64,${base64Image}`);
     } catch (error) {
       console.error("Error generating plot:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -108,7 +128,13 @@ function App() {
                 {suggestions[index] && Object.keys(suggestions[index]).length > 0 && (
                   <ul className="suggestions-list">
                     {Object.entries(suggestions[index]).map(([id, name]) => (
-                      <li key={id} onClick={() => selectSuggestion(index, id, name)}>
+                      <li
+                        key={id}
+                        onMouseDown={() => {
+                          suggestionClickedRef.current = true; // Set flag early
+                        }}
+                        onClick={() => selectSuggestion(index, id, name)}
+                      >
                         {name}
                       </li>
                     ))}
@@ -155,7 +181,9 @@ function App() {
       </div>
 
       <div className="plot-container">
-        {plotUrl ? (
+        {loading ? (
+          <div className="spinner"></div> // Show spinner while loading
+        ) : plotUrl ? (
           <img src={plotUrl} alt="Player Stats Plot" />
         ) : (
           <p>The generated comparison plot will appear here.</p>

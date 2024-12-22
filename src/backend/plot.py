@@ -3,6 +3,10 @@ import matplotlib as mpl
 from constants import PERMITTED_STAT_TYPES
 from typing import List
 from player_stats import PlayerStats
+from io import BytesIO
+import base64
+
+mpl.use('Agg')
 
 def get_labels_for_stat_type(stat_type):
     labels = {}
@@ -23,7 +27,7 @@ def get_labels_for_stat_type(stat_type):
     return labels
 
 
-def plot_stats_per_season(stat_type: str, players: List[PlayerStats]):
+def plot_stats_per_season(stat_type: str, players: List[PlayerStats]) -> str:
     """
     Plots the given data representing stats per season for multiple players.
 
@@ -68,5 +72,14 @@ def plot_stats_per_season(stat_type: str, players: List[PlayerStats]):
 
     # Display the plot
     plt.tight_layout()
-    plt.show()
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format="png")
+    buffer.seek(0)
+    plt.close()
+
+    image_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    buffer.close()
+
+    return image_base64
 
