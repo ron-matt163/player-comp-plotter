@@ -1,12 +1,16 @@
 .App {
   display: flex;
   flex-direction: row;
+  /* Horizontal alignment */
   width: 100vw;
-  height: 100vh;
+  height: 100%;
+  /* Allow the height to grow dynamically */
   background-color: #f0f0f0;
   margin: 10px;
   padding: 0;
   box-sizing: border-box;
+  align-items: stretch;
+  /* Ensure children grow equally in height */
 }
 
 .form-container {
